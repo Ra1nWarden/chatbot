@@ -5,8 +5,12 @@ import {
   JsonToSseTransformStream,
   smoothStream,
   stepCountIs,
-  streamText,
 } from "ai";
+import * as ai from 'ai';
+import { wrapAISDK } from 'langsmith/experimental/vercel';
+const {
+  streamText,
+} = wrapAISDK(ai);
 import { unstable_cache as cache } from "next/cache";
 import { after } from "next/server";
 import {
