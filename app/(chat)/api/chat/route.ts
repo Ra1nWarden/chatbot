@@ -1,4 +1,5 @@
 import { geolocation } from "@vercel/functions";
+import * as ai from "ai";
 import {
   convertToModelMessages,
   createUIMessageStream,
@@ -6,11 +7,10 @@ import {
   smoothStream,
   stepCountIs,
 } from "ai";
-import * as ai from 'ai';
-import { wrapAISDK } from 'langsmith/experimental/vercel';
-const {
-  streamText,
-} = wrapAISDK(ai);
+import { wrapAISDK } from "langsmith/experimental/vercel";
+
+const { streamText } = wrapAISDK(ai);
+
 import { unstable_cache as cache } from "next/cache";
 import { after } from "next/server";
 import {
@@ -28,6 +28,7 @@ import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
 import { createDocument } from "@/lib/ai/tools/create-document";
 import { getWeather } from "@/lib/ai/tools/get-weather";
+import { remoteTools } from "@/lib/ai/tools/mcp";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { updateDocument } from "@/lib/ai/tools/update-document";
 import { isProductionEnvironment } from "@/lib/constants";
@@ -177,6 +178,10 @@ export async function POST(request: Request) {
 
     let finalMergedUsage: AppUsage | undefined;
 
+    const mcpTools = await remoteTools();
+    const mcpToolNames = Object.keys(mcpTools);
+    console.log(mcpToolNames);
+
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
         const result = streamText({
@@ -186,15 +191,17 @@ export async function POST(request: Request) {
           stopWhen: stepCountIs(5),
           experimental_activeTools:
             selectedChatModel === "chat-model-reasoning"
-              ? []
-              : [
+              ? undefined
+              : ([
+                  ...mcpToolNames,
                   "getWeather",
                   "createDocument",
                   "updateDocument",
                   "requestSuggestions",
-                ],
+                ] as any),
           experimental_transform: smoothStream({ chunking: "word" }),
           tools: {
+            ...mcpTools,
             getWeather,
             createDocument: createDocument({ session, dataStream }),
             updateDocument: updateDocument({ session, dataStream }),
