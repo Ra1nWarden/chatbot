@@ -9,7 +9,7 @@ const ollama = createOllama({
   baseURL: 'http://192.168.1.220:30068/api',
 });
 
-const useOllama = process.env.USE_OLLAMA === "true";
+const useOllama = process.env.NEXT_PUBLIC_USE_OLLAMA === "true";
 
 export const myProvider = useOllama ? customProvider({
   languageModels: {

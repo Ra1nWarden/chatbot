@@ -6,15 +6,17 @@ export type ChatModel = {
   description: string;
 };
 
-export const chatModels: ChatModel[] = [
+const useOllama = process.env.NEXT_PUBLIC_USE_OLLAMA === "true";
+
+export const chatModels: ChatModel[] = useOllama ? [
   {
     id: "chat-model",
-    name: "Grok Vision",
+    name: "Ollama",
     description: "Advanced multimodal model with vision and text capabilities",
-  },
+  }] : [
   {
-    id: "chat-model-reasoning",
-    name: "Grok Reasoning",
+    id: "chat-model",
+    name: "OpenAI",
     description:
       "Uses advanced chain-of-thought reasoning for complex problems",
   },
